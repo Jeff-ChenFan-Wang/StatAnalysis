@@ -1,0 +1,9 @@
+git clone https://github.com/Jeff-ChenFan-Wang/StatAnalysis.git
+
+git add -A
+git commit -m "i added something ...." 
+
+git push
+
+
+
