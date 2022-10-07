@@ -30,5 +30,3 @@ abline(linAlg,
 grid()
 
 summary(linAlg)
-
-#test line
