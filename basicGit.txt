@@ -11,3 +11,11 @@
 
 ### getting the newest updates ###
 	git pull
+
+
+### create new branch ###
+	git checkout -b (branchName)
+	git add -A
+	git commit -m "comment what you added"
+	git push --set-upstream origin (branchName)
+
