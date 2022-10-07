@@ -9,4 +9,5 @@
 	git push
 
 
-
+### getting the newest updates ###
+	git pull
