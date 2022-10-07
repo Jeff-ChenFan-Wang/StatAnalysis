@@ -9,7 +9,7 @@
 
 
 ## Clone Repository 
-You only need to do this ONCE when you first start working with git <br>
+You only need to do this ONCE when you first start working with our github project <br>
 ```git clone https://github.com/Jeff-ChenFan-Wang/StatAnalysis.git```
 
 ## Create new branch 
