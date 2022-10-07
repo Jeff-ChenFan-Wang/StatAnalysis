@@ -18,3 +18,4 @@ You want to do this if you are working on something separately
  2. ```git add -A```
  3. ```git commit -m "describe what you did"```
  4. ```git push --set-upstream origin branchName```
+ 5. msg me and let me know so I can merge your changes into master
