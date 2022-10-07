@@ -1,9 +1,12 @@
-git clone https://github.com/Jeff-ChenFan-Wang/StatAnalysis.git
+### clone repository (only need to do this once) ###
+	git clone https://github.com/Jeff-ChenFan-Wang/StatAnalysis.git
 
-git add -A
-git commit -m "i added something ...." 
 
-git push
+
+### Adding your changes to git ###
+	git add -A
+	git commit -m "i added something ...." 
+	git push
 
 
 
