@@ -1,4 +1,7 @@
 library('tidycensus')
+
+##### WEEK 1 #####
+
 df <- get_acs(
   geography = "tract",
   variables = c('DP05_0001E','DP05_0018E','DP03_0062E','DP02_0065PE','DP03_0096PE','DP03_0128PE','DP04_0047PE'),
@@ -13,7 +16,7 @@ df<- df[grep("M$",names(df),invert=TRUE)]
 colnames(df) <- c('geoid','name','totpop','medage','medhhinc','propbac','propcov','proppov','proprent','geometry')
 
 #heat map
-ggplot() + 
+ggplot() +
 geom_sf(data = df, aes(fill = propbac), show.legend = TRUE)
 + ggtitle("Heatmap of Baccalaureate Attainment Rate in the Cook County")
 + scale_fill_viridis_c(option="B", direction = -1)
@@ -38,6 +41,8 @@ grid()
 
 summary(linAlg)
 
+##### Week 2 #####
+
 # Finding Normality, Serial Correlation, heteroskedasticity
 # Normality
 hist(linAlg$residuals)
@@ -52,5 +57,8 @@ plot(df$propbac[-1319], df$propbac[-1]) #lag and current values plot - does not 
 #Heteroskedasticity
 plot(linAlg) #look for residual vs Fitted plot
 bptest(linAlg) #shows hetero..
+
+#Step 7 Simulating Data
+sim_medhhinc = replicate(10000,sample(df$medhhinc,nrow(df),replace=TRUE))
 
 
