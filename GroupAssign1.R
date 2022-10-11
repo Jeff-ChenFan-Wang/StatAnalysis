@@ -1,4 +1,5 @@
 library('tidycensus')
+library('tidyverse')
 
 ##### WEEK 1 #####
 
@@ -9,7 +10,8 @@ df <- get_acs(
   state = "IL",
   county = "Cook",
   geometry = TRUE,
-  output="wide"
+  output="wide",
+  key = 'e61b56441ee4ab32492482feed5b4d49fd550cea'
 )
 
 df<- df[grep("M$",names(df),invert=TRUE)]
@@ -17,9 +19,9 @@ colnames(df) <- c('geoid','name','totpop','medage','medhhinc','propbac','propcov
 
 #heat map
 ggplot() +
-geom_sf(data = df, aes(fill = propbac), show.legend = TRUE)
-+ ggtitle("Heatmap of Baccalaureate Attainment Rate in the Cook County")
-+ scale_fill_viridis_c(option="B", direction = -1)
+geom_sf(data = df, aes(fill = propbac), show.legend = TRUE) +
+ggtitle(label = "Heatmap of Baccalaureate Attainment Rate in the Cook County") +
+scale_fill_viridis_c(name = 'Proportion', option="B", direction = -1)
 
 
 linAlg <- lm('propbac ~ medhhinc',data=df)
@@ -60,5 +62,13 @@ bptest(linAlg) #shows hetero..
 
 #Step 7 Simulating Data
 sim_medhhinc = replicate(10000,sample(df$medhhinc,nrow(df),replace=TRUE))
+
+# Step 8 - Distribution of correlation
+attach(df)
+CorSample = apply(sim_medhhinc, MARGIN = 2, FUN = cor, propbac, 'complete.obs')
+detach(df)
+plot(density(CorSample), col = "blue",
+     main = "The distribution of correlations",
+     xlab = "Correlation",lty = 1, lwd = 1.5)
 
 
