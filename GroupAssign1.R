@@ -20,13 +20,13 @@ df<- df[grep("M$",names(df),invert=TRUE)]
 colnames(df) <- c('geoid','name','totpop','medage','medhhinc','propbac','propcov','proppov','proprent','geometry')
 df <- na.omit(df)
 
-#heat map
+#Step 4 heat map
 ggplot() +
   geom_sf(data = df, aes(fill = propbac), show.legend = TRUE) +
   labs(title = 'Baccalaureate Attainment Rates', subtitle = 'Cook County, IL', caption = "From 2015 to 2019") + 
   scale_fill_viridis_c(name = 'Rate', option="B", direction = -1)
 
-
+#Step 5 
 linAlg <- lm('propbac ~ medhhinc',data=df)
 summary(linAlg)
 
@@ -114,7 +114,7 @@ ggqqplot(samplesCorrMatrix, color = "blue") # shows normal data
 actualPredictions <- fitted(linAlg)
 sum((actualPredictions - df$propbac)^2)
 
-yintercept <- linAlg$coefficients[1]
+yintercept <- linAlg$coefficients['(Intercept)']
 yintercept
 
 simulatedm <- seq(from = 0.0002, to= 0.00031, length = 1000)
@@ -132,6 +132,45 @@ SSEFinal <- lapply(1:length(simulatedm), SSEFunc)
 SSEFinal
 
 plot(simulatedm, SSEFinal, xlab = "Gradient Values", ylab="Corresponding SSE", col = "blue", main = "Response of SSE for different Values of Slope", sub = "Keeping Y-Intercept constant")
- abline(v = actualm, lwd = 2)
+ abline(v = actualm, lwd = 2, lty = 2)
  mtext("This is Model based value of Gradient: 0.0002577586 ", side=3)
+ 
+#Q11
+ slope = linAlg$coefficients['medhhinc']
+ inter_test = seq(0, 2*yintercept, 0.01*yintercept)
+ data = data.frame(cbind(df$medhhinc, df$propbac)) %>%
+   rename(X = X1, Y = X2) %>% drop_na()
+ log_likelihood = function(yintercept, slope. = slope, x = data$X, y = data$Y){
+   SSE = sum((y - slope.*x - yintercept)^2); n = length(y)
+   sigma_sq = SSE/(n - 2)
+   return(-(log(sigma_sq)/2 + log(2*pi)/2)*n - SSE/(2*sigma_sq))
+ }
+ log_likeli = sapply(inter_test, log_likelihood)
+ plot(inter_test, log_likeli, type = 'l',  lwd = 2,
+      xlab = "Intercept Values", ylab="Corresponding Log Likelihood Values", col = "blue", main = "Response of Log Likelihood for different Values of Intercept", sub = "Keeping Slope constant")
+ points(x = yintercept, y = log_likelihood(yintercept), col = 'red', pch = 16)
+ abline(v = yintercept, lty = 2, lwd = 2)
+ mtext("This is Model based value of Gradient: 0.0002577586 ", side=3)
+ 
+ 
+ 
+ 
+#Q12
+ 
+ sum(df$totpop*df$propbac/100, na.rm = TRUE)
+ df_new = df %>% drop_na(medhhinc, propbac)
+ df_new[['medhhinc_policy']] = df_new[['medhhinc']]
+ medhhinc_sort = sort(df_new[['medhhinc']], index.return = TRUE)$ix
+ df_new[['medhhinc_policy']][medhhinc_sort[1:50]] = df_new[['medhhinc_policy']][medhhinc_sort[1:50]] + 10000
+ df_new[['medhhinc_policy']][rev(medhhinc_sort)[1:50]] = df_new[['medhhinc_policy']][rev(medhhinc_sort)[1:50]] - 10000
+ df_new[['propbac_pre']] = slope*df_new[['medhhinc_policy']] + yintercept
+ sum(df_new$totpop*df_new$propbac_pre/100)
+ 
+ ggplot() +
+   geom_sf(data = df, aes(fill = propbac), show.legend = TRUE) +
+   labs(title = 'Baccalaureate Attainment Rates', subtitle = 'Cook County, IL', caption = "From 2015 to 2019") + 
+   scale_fill_viridis_c(name = 'Rate', option="B", direction = -1)
+ 
+ 
+ 
  
