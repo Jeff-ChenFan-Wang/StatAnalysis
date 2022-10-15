@@ -94,11 +94,16 @@ proportionofsamples
 sum(proportionofsamples) / 10000 # finding proportion which is 0 and that is good :D
 
 # Step 8 - Distribution of correlation
-hist(samplesCorrMatrix, breaks = 100, prob = TRUE, col= "blue", main = "Distribution of correlation between 10000 samples of Median Household Incomes and actual Baccalaureate Attainment Rates", xlab = "Sample Correlations")
+hist(samplesCorrMatrix, breaks = 100, prob = TRUE, col= "blue", 
+  main = "Bootstrapped Correlations between Median Household Incomes
+     and actual Baccalaureate Attainment Rates", xlab = "Sample Correlations",
+    xlim=range( c(min(samplesCorrMatrix),ActualCorr) )
+  )
  lines(density(samplesCorrMatrix), lwd = 2)
  grid()
+points(ActualCorr,0,pch=19,col='red')
 
- #test for normality -- both test shows that data is normal
+#test for normality -- both test shows that data is normal
 install.packages("tseries")
 require(tseries)
 jarque.bera.test(samplesCorrMatrix)
