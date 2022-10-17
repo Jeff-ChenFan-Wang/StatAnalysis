@@ -176,6 +176,23 @@ plot(simulatedm, SSEFinal, xlab = "Gradient Values", ylab="Corresponding SSE", c
    labs(title = 'Baccalaureate Attainment Rates', subtitle = 'Cook County, IL', caption = "From 2015 to 2019") + 
    scale_fill_viridis_c(name = 'Rate', option="B", direction = -1)
  
+
+ #overlaid robinhood tax
+ ggplot(df_new, aes(x = df_new$medhhinc)) +
+   geom_point(aes(y = df_new$propbac, color = "Actual Rates")) +
+   geom_point(aes(y = df_new$propbac_pre, color = "Predicted Rates After Tax")) +
+   geom_point(aes(y = df_new$propbac_old, color = "Predicted Rates Before Tax")) +
+   labs(
+     x='Original Median Household Income',
+     y='Baccalaureate Attainment Rates'
+    ) +
+   ggtitle('Effect of Robinhood Tax')+theme(plot.title = element_text(hjust = 0.5)) +
+  theme(legend.position = c(0.8,0.2))
+
+ mean(df_new$propbac)
+ mean(df_new$propbac_pre)
+ 
+ 
  
  
  
