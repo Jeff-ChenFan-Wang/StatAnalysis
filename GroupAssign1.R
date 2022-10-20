@@ -195,4 +195,23 @@ plot(simulatedm, SSEFinal, xlab = "Gradient Values", ylab="Corresponding SSE", c
  
  
  
+################################# GROUP ASSIGNMENT 2 ###########################
+### WEEK 4
+##Q1 and Q2
+GA2Model <- lm(propbac ~ totpop + medage + medhhinc + propcov + proppov + proprent, data = df)
+summary(GA2Model)
+#newR^2 0.7149 and #preR^2 0.5351
+#more variability in the predicted value is now answered by our predictors.. comparing the two
+#one can say that Propbac is dependent on all the factors rather than only 1 which was medhhinc
+
+#Q2b
+anova <- aov(propbac ~ totpop + medage + medhhinc + propcov + proppov + proprent, data = df)
+summary(anova)
+#propbac majorly depend on medhhinc but a major contribution is done by proprent as well
+ggplot() + labs(x = "Residuals", y= "Emperical Densities", title = "Distribution of Residuals from Single Predictor Model and Multi Predictor Model") + geom_histogram(bins = 50, aes(x = GA2Model$residuals, y=..density..), colour="black", fill="brown")+ geom_density() +
+geom_histogram(aes(x = linAlg$residuals, y =..density..), bins = 50, fill="grey", alpha=0.5,  colour = "Black",position="identity") + geom_density()
+#plot2 looks normal now.. so residuals are following normal distribution here
+
+#Q3 we should use the multi predictor one.. 
+
  
