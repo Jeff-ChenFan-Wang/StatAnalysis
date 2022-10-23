@@ -229,10 +229,13 @@ ggplot() +
   scale_color_manual(values = c('old'='blue','new'='red')) +
   guides(fill=guide_legend('Model Residual'))
 
-#plot2 looks normal now.. so residuals are following normal distribution here
 
-#Q3 we should use the multi predictor one.. 
+#Q3 we should use the multi predictor one..
+  # WE should use the multivariate model because its R² is higher and anova indicates improvement is significant
 
+#Q4 TODO
+
+#q5 TODO
 
 
  
