@@ -62,6 +62,7 @@ shapiro.test(linAlg$residuals)
 ks.test(linAlg$residuals, pnorm)#test and plots show that the data is not normal
 
 #Serial Correlation, need to discuss during meeting
+library(lmtest)
 dwtest(linAlg) # There is serial correlation we will reject Null hypothesis, shows serial corr..
 plot(acf(linAlg$residuals, type = "correlation"), main = "Auto Correlation Plot") # does not show serial corr
 grid()
@@ -104,10 +105,10 @@ hist(samplesCorrMatrix, breaks = 100, prob = TRUE, col= "blue",
 points(ActualCorr,0,pch=19,col='red')
 
 #test for normality -- both test shows that data is normal
-install.packages("tseries")
+#install.packages("tseries")
 require(tseries)
 jarque.bera.test(samplesCorrMatrix)
-install.packages("nortest")
+#install.packages("nortest")
 require(nortest)
 lillie.test(samplesCorrMatrix)
 
@@ -178,6 +179,8 @@ plot(simulatedm, SSEFinal, xlab = "Gradient Values", ylab="Corresponding SSE", c
  
 
  #overlaid robinhood tax
+ df_new[['propbac_old']] = slope*df_new[['medhhinc']] + yintercept
+ 
  ggplot(df_new, aes(x = df_new$medhhinc)) +
    geom_point(aes(y = df_new$propbac, color = "Actual Rates")) +
    geom_point(aes(y = df_new$propbac_pre, color = "Predicted Rates After Tax")) +
@@ -201,17 +204,35 @@ plot(simulatedm, SSEFinal, xlab = "Gradient Values", ylab="Corresponding SSE", c
 GA2Model <- lm(propbac ~ totpop + medage + medhhinc + propcov + proppov + proprent, data = df)
 summary(GA2Model)
 #newR^2 0.7149 and #preR^2 0.5351
-#more variability in the predicted value is now answered by our predictors.. comparing the two
-#one can say that Propbac is dependent on all the factors rather than only 1 which was medhhinc
+#Explanations
+  #2.a) The old model's R² is 0.5351, while the new one is 0.7149. 
+    # This means our new model is able to explain ~18% more of the variance due to the additional predictors 
+    # added. Since most of the coefficients of the new predictors are significant, it likely means that
+    # the additional explainability is because such factors truely do affect propbac in real life. 
 
 #Q2b
-anova <- aov(propbac ~ totpop + medage + medhhinc + propcov + proppov + proprent, data = df)
-summary(anova)
-#propbac majorly depend on medhhinc but a major contribution is done by proprent as well
-ggplot() + labs(x = "Residuals", y= "Emperical Densities", title = "Distribution of Residuals from Single Predictor Model and Multi Predictor Model") + geom_histogram(bins = 50, aes(x = GA2Model$residuals, y=..density..), colour="black", fill="brown")+ geom_density() +
-geom_histogram(aes(x = linAlg$residuals, y =..density..), bins = 50, fill="grey", alpha=0.5,  colour = "Black",position="identity") + geom_density()
+anova(linAlg,GA2Model)
+  #anova result p-value < 2.2e-16 hence improvement is significant 
+
+#Q2c
+ggplot() + 
+  geom_density(
+    aes(x = GA2Model$residuals, y=..density.., fill="Single-variate"), 
+    alpha=0.3 , colour="black")+ 
+  geom_density(
+    aes(x = linAlg$residuals, y =..density.., fill="Multivariate"), 
+    alpha=0.3,  colour = "Black", position="identity") + 
+  labs(x = "Residuals",
+       y= "Emperical Densities", 
+       title = "Density of Residuals from Single-Variate Model vs Multivariate Model",
+       color='Legend') +
+  scale_color_manual(values = c('old'='blue','new'='red')) +
+  guides(fill=guide_legend('Model Residual'))
+
 #plot2 looks normal now.. so residuals are following normal distribution here
 
 #Q3 we should use the multi predictor one.. 
+
+
 
  
