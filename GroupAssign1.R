@@ -292,6 +292,16 @@ weighted.mean(df2$propbac[df2$IsCook == 0], df2woCook$totpop)
 t.test(df2$propbac[df2$IsCook == 1] , mu = eq)
 
 
+#Q7_____________ 
+# I dont know if  I am right or wrong, I got the track for NBC from this web
+#https://geocoding.geo.census.gov/geocoder/geographies/address?street=455%20Cityfront%20Plaza%20Dr&city=Chicago&state=Illinois&zip=60611&benchmark=4&vintage=4
+#I assume gleatcher is also in the same tract
+# it also matches geoid so should be good
+#17031081403 GEO ID for NBC and GLEATCHER
+
+
+GA2Model$fitted.values[df2$geoid == 17031081403] #point estimate
+confint(GA2Model, level= 0.9) #no idea here, confused, Discuss
 
 
  
