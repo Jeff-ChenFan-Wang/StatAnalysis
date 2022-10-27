@@ -229,6 +229,13 @@ ggplot() +
   scale_color_manual(values = c('old'='blue','new'='red')) +
   guides(fill=guide_legend('Model Residual'))
 
+#another graph for densities
+colors <- c("Multi_Feature" = "blue", "Single_Feature" = "red")
+ggplot() + 
+  labs(x = "Residuals", y= "Emperical Densities", title = "Distribution of Residuals from Single Predictor Model and Multi Predictor Model", color = "Legend") + 
+  geom_density(aes(x = GA2Model$residuals, y=..density.., color = "Multi_Feature"), size = 2) + 
+  geom_density(aes(x = linAlg$residuals, y =..density.., color = "Single_Feature"), alpha = 0.5, size = 2) +
+  scale_color_manual(values = colors)
 
 #Q3 we should use the multi predictor one..
   # WE should use the multivariate model because its R² is higher and anova indicates improvement is significant
@@ -236,6 +243,55 @@ ggplot() +
 #Q4 TODO
 
 #q5 TODO
+
+#----------------------------------
+#------------------------------------------------
+#q6a
+
+df2 <- get_acs(
+  geography = "tract",
+  variables = c('DP05_0001E','DP02_0065PE'),
+  year=2019,
+  state = "IL",
+  geometry = TRUE,
+  output="wide",
+  key = 'e61b56441ee4ab32492482feed5b4d49fd550cea'
+)
+head(df2)
+
+#renaming
+df2<- df2[grep("M$",names(df2),invert=TRUE)]
+colnames(df2) <- c('geoid','name','totpop','propbac','geometry')
+
+#created a column IsCook and added Flag to it
+df2$IsCook <- 0
+df2$IsCook[grep('Cook', df2$name)] = 1
+
+prevDim <- dim(df2)
+prevDim
+
+df2 <- na.omit(df2)
+newDim <- dim(df2)
+newDim
+
+#filtering population to atleast 100
+df2 <- df2 %>% 
+  filter(df2$totpop >=100)
+
+df2
+
+#Q6b
+
+#equal weight avg
+eq <- mean(df2$propbac[df2$IsCook == 0])
+
+#weighted by population
+weighted.mean(df2$propbac[df2$IsCook == 0], df2woCook$totpop)
+
+#q6c t test to see the means
+t.test(df2$propbac[df2$IsCook == 1] , mu = eq)
+
+
 
 
  
