@@ -238,30 +238,28 @@ ggplot() +
   scale_color_manual(values = colors)
 
 #Q3 we should use the multi predictor one..
-  # WE should use the multivariate model because its R² is higher and anova indicates improvement is significant
+# WE should use the multivariate model because its R² is higher and anova indicates improvement is significant
 
-#Q4 TODO
+#Q4 
+#A: Totpop, MedAge
+#B: Proprent
+#C: medhhinc, proppov, propcov
 
-#q5 TODO
 
-#----------------------------------
-#------------------------------------------------
 #q6a
 
-df2 <- get_acs(
-  geography = "tract",
-  variables = c('DP05_0001E','DP02_0065PE'),
-  year=2019,
-  state = "IL",
-  geometry = TRUE,
-  output="wide",
-  key = 'e61b56441ee4ab32492482feed5b4d49fd550cea'
-)
-head(df2)
+df2 <- map_df(us, function(x) { 
+  get_acs(geography = "tract", 
+          year = 2019,
+          variables = c('DP05_0001E','DP02_0065PE'), 
+          state = x,
+          output = 'wide')
+})
 
 #renaming
 df2<- df2[grep("M$",names(df2),invert=TRUE)]
 colnames(df2) <- c('geoid','name','totpop','propbac','geometry')
+head(df2)
 
 #created a column IsCook and added Flag to it
 df2$IsCook <- 0
@@ -283,13 +281,13 @@ df2
 #Q6b
 
 #equal weight avg
-eq <- mean(df2$propbac[df2$IsCook == 0])
+eq_weight <- mean(df2$propbac[df2$IsCook == 0])
 
 #weighted by population
-weighted.mean(df2$propbac[df2$IsCook == 0], df2woCook$totpop)
+weighted.mean(df2$propbac[df2$IsCook == 0], df2$totpop[df2$IsCook==0])
 
 #q6c t test to see the means
-t.test(df2$propbac[df2$IsCook == 1] , mu = eq)
+t.test(df2$propbac[df2$IsCook == 1] , mu = eq_weight)
 
 
 #Q7_____________ 
@@ -300,8 +298,14 @@ t.test(df2$propbac[df2$IsCook == 1] , mu = eq)
 #17031081403 GEO ID for NBC and GLEATCHER
 
 
-GA2Model$fitted.values[df2$geoid == 17031081403] #point estimate
+GA2Model$fitted.values[df2$geoid == "17031081403"] #point estimate
 confint(GA2Model, level= 0.9) #no idea here, confused, Discuss
 
+#Q7B
+#adding weights
+GA2Model2 <- lm(propbac ~ totpop + medage + medhhinc + propcov + proppov + proprent, data = df, weights = totpop)
+confint(GA2Model2, level = 0.9) #interval are more tighter
+GA2Model2$fitted.values[df2$geoid == 17031081403] #point estimate shows smaller value
 
+#Q7C
  
