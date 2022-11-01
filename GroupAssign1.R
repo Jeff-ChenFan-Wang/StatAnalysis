@@ -245,6 +245,14 @@ ggplot() +
 #B: Proprent
 #C: medhhinc, proppov, propcov
 
+#Q5
+'''
+propbac = 0.01 medhhinc - 0.02 proprent + 0.03 totpop ... 
+bascially, increasing  medhhinc by 5 implies increasing propbac by 0.05 
+
+also figure out how vars move together (e.g medhinc increases causes increased rents etc)
+endogenous effects within variables
+'''
 
 #q6a
 
