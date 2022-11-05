@@ -252,12 +252,18 @@ ggplot() +
 summary(GA2Model)
 #Naive answer boost insurance coverage proportion (propcov) by ≈ 0.0887
 
-library(sf)
-simpleDf = st_drop_geometry(df[c('totpop','medage','medhhinc','propcov','proppov','proprent')])
+summary(lm(proppov ~ medhhinc,data=df))
+
 corrMat = cor(simpleDf)
-summary(lm(medhhinc ~ propcov, data = df))
-summary(lm(proppov ~ propcov, data = df))
-summary(lm(proprent ~ propcov, data = df))
+
+
+
+
+
+
+
+summary(lm(medhhinc ~ propcov, data = scaledDf))
+
 #propbac = 0.01 medhhinc - 0.02 proprent + 0.03 totpop ... 
 #bascially, increasing  medhhinc by 5 implies increasing propbac by 0.05 
 
@@ -266,14 +272,15 @@ summary(lm(proprent ~ propcov, data = df))
 
 
 #q6a
-
-df2 <- map_df(us, function(x) { 
+Allstates <- unique(fips_codes$state)[1:51]
+df2 <- map_df(Allstates, function(x) { 
   get_acs(geography = "tract", 
           year = 2019,
           variables = c('DP05_0001E','DP02_0065PE'), 
           state = x,
-          output = 'wide')
-})
+          output = 'wide'
+  )})
+
 
 #renaming
 df2<- df2[grep("M$",names(df2),invert=TRUE)]
