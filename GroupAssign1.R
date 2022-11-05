@@ -240,19 +240,30 @@ ggplot() +
 #Q3 we should use the multi predictor one..
 # WE should use the multivariate model because its R² is higher and anova indicates improvement is significant
 
+# Propcov : proportion of insurance coverage
+# Proppov : proportion below poverty level
+# Proprent : proportion renting houses
 #Q4 
 #A: Totpop, MedAge
 #B: Proprent
 #C: medhhinc, proppov, propcov
 
 #Q5
-'''
-propbac = 0.01 medhhinc - 0.02 proprent + 0.03 totpop ... 
-bascially, increasing  medhhinc by 5 implies increasing propbac by 0.05 
+summary(GA2Model)
+#Naive answer boost insurance coverage proportion (propcov) by ≈ 0.0887
 
-also figure out how vars move together (e.g medhinc increases causes increased rents etc)
-endogenous effects within variables
-'''
+library(sf)
+simpleDf = st_drop_geometry(df[c('totpop','medage','medhhinc','propcov','proppov','proprent')])
+corrMat = cor(simpleDf)
+summary(lm(medhhinc ~ propcov, data = df))
+summary(lm(proppov ~ propcov, data = df))
+summary(lm(proprent ~ propcov, data = df))
+#propbac = 0.01 medhhinc - 0.02 proprent + 0.03 totpop ... 
+#bascially, increasing  medhhinc by 5 implies increasing propbac by 0.05 
+
+#also figure out how vars move together (e.g medhinc increases causes increased rents etc)
+#endogenous effects within variables
+
 
 #q6a
 
@@ -303,9 +314,9 @@ t.test(df2$propbac[df2$IsCook == 1] , mu = eq_weight)
 #https://geocoding.geo.census.gov/geocoder/geographies/address?street=455%20Cityfront%20Plaza%20Dr&city=Chicago&state=Illinois&zip=60611&benchmark=4&vintage=4
 #I assume gleatcher is also in the same tract
 # it also matches geoid so should be good
-#17031081403 GEO ID for NBC and GLEATCHER
+# 17031081403 GEO ID for NBC and GLEATCHER
 
-
+#Q7A
 GA2Model$fitted.values[df2$geoid == "17031081403"] #point estimate
 confint(GA2Model, level= 0.9) #no idea here, confused, Discuss
 
@@ -316,4 +327,4 @@ confint(GA2Model2, level = 0.9) #interval are more tighter
 GA2Model2$fitted.values[df2$geoid == 17031081403] #point estimate shows smaller value
 
 #Q7C
- 
+
