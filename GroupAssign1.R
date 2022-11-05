@@ -250,25 +250,21 @@ ggplot() +
 
 #Q5
 summary(GA2Model)
+medhhincBoostReqNaive = 0.05/GA2Model$coefficients['medhhinc']
 #Naive answer boost insurance coverage proportion (propcov) by ≈ 0.0887
-
-summary(lm(proppov ~ medhhinc,data=df))
 
 corrMat = cor(simpleDf)
 
+povHincLm = lm(proppov ~ medhhinc,data=df)
+covHincLm = lm(propcov ~ medhhinc,data=df)
+rentHincLm = lm(proprent ~ medhhinc,data=df)
 
+endogMedhhincCoef = GA2Model$coefficients['medhhinc'] +
+  povHincLm$coefficients['medhhinc']*GA2Model$coefficients['proppov'] + 
+  covHincLm$coefficients['medhhinc']*GA2Model$coefficients['propcov'] +
+  rentHincLm$coefficients['medhhinc']*GA2Model$coefficients['proprent']
 
-
-
-
-
-summary(lm(medhhinc ~ propcov, data = scaledDf))
-
-#propbac = 0.01 medhhinc - 0.02 proprent + 0.03 totpop ... 
-#bascially, increasing  medhhinc by 5 implies increasing propbac by 0.05 
-
-#also figure out how vars move together (e.g medhinc increases causes increased rents etc)
-#endogenous effects within variables
+medhhincBoostReqEndog = 0.05/endogMedhhincCoef
 
 
 #q6a
