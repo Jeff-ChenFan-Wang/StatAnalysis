@@ -520,6 +520,7 @@ plot(fertrate, sqrt(proppov), col = 'deepskyblue')
 plot(propcomp, sqrt(proppov), col = 'deepskyblue')
 plot(tolhouse, sqrt(proppov), col = 'deepskyblue')
 plot(propdisa, sqrt(proppov), col = 'deepskyblue')
+plot(propsch, sqrt(proppov), col = 'deepskyblue')
 detach(df3)
 
 # (1) Step 1 - Transformation on 'tolhouse'
@@ -541,13 +542,56 @@ dwtest(lm_trans2, alternative = "two.sided")
 bptest(lm_trans2)
 ks.test(lm_trans2$residuals/summary(lm_trans2)$sigma, pnorm)
 
+# (2) Step 2 - Transformation on 'propsch'
 
-# step functions derived from continuous predictors
-df3$tolhouse_grp = NA
-floors = c(0, 750, 1500, 2250, 3000, 5000, Inf)
-for (k in c(1:(length(floors)-1))){
-  df3[(df3$tolhouse >= floors[k])&(df3$tolhouse < floors[k+1]), 'tolhouse_grp'] = paste('LV', k)
+plot(log(propsch), sqrt(proppov), col = 'deepskyblue')
+
+# Still use log transformation on 'propsch'
+# This operation will make the scale of all the explanatory variables comparable
+# Adjusted R^2 is improved from 0.6587 to 0.6693
+lm_full =  lm(formula = sqrt(proppov) ~ medage + propbac + propcov + propempl +
+  propblack + fertrate + propcomp + log(tolhouse) + propdisa + log(propsch),
+  data = df3, subset = (df3$propsch != 0))
+step(lm_full, direction = 'backward')
+
+lm_trans3 = lm(formula = sqrt(proppov) ~ medage + propbac + propcov + propempl +
+  propblack + fertrate + propcomp + log(tolhouse) + propdisa + log(propsch),
+  data = filter(df3, propsch != 0))
+summary(lm_trans3)
+AdjR2_3 = summary(lm_trans3)$adj.r.squared
+
+dwtest(lm_trans3, alternative = "two.sided")
+bptest(lm_trans3)
+ks.test(lm_trans3$residuals/summary(lm_trans3)$sigma, pnorm)
+
+# (2) Step 3 - Transformation on 'fertrate'
+
+summary(df3$fertrate)
+
+# The linear relationship between 'fertrate' and the response 'sqrt(proppov)' is bad
+# Use step functions derived from continuous predictors this time
+# Discretize the variable 'fertrate' into a series of levels as its distribution is typically pyramid-shaped
+# The ajusted R^2 can be improved to 0.6698
+df3$fertrate_grp = NA
+floors = c(seq(0, 200, 10), Inf)
+Levels = length(floors) - 1
+for (k in c(1:Levels)){
+  df3[(df3$fertrate >= floors[k])&(df3$fertrate < floors[k+1]), 'fertrate_grp'] = paste('LV', k)
 }
-df3$tolhouse_grp = factor(df3$tolhouse_grp, levels = paste('LV', 1:6))
+df3$fertrate_grp = factor(df3$fertrate_grp, levels = paste('LV', 1:Levels))
 
+lm_full = lm(formula = sqrt(proppov) ~ medage + propbac + propcov + propempl +
+  propblack + fertrate_grp + propcomp + log(tolhouse) + propdisa + log(propsch),
+  data = filter(df3, propsch != 0))
+step(lm_full, direction = 'backward')
+
+lm_trans4 = lm(formula = sqrt(proppov) ~ medage + propbac + propcov + propempl +
+  propblack + fertrate_grp + propcomp + log(tolhouse) + propdisa + log(propsch),
+  data = filter(df3, propsch != 0))
+
+summary(lm_trans4)
+AdjR2_4 = summary(lm_trans4)$adj.r.squared
+dwtest(lm_trans4, alternative = "two.sided")
+bptest(lm_trans4)
+ks.test(lm_trans4$residuals/summary(lm_trans4)$sigma, pnorm)
 
