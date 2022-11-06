@@ -278,7 +278,8 @@ df2 <- map_df(Allstates, function(x) {
           year = 2019,
           variables = c('DP05_0001E','DP02_0065PE'), 
           state = x,
-          output = 'wide'
+          output = 'wide',
+          key = 'e61b56441ee4ab32492482feed5b4d49fd550cea'
   )})
 
 
@@ -334,4 +335,67 @@ confint(GA2Model2, level = 0.9) #interval are more tighter
 GA2Model2$fitted.values[df2$geoid == 17031081403] #point estimate shows smaller value
 
 #Q7C
+
+
+
+## Q9
+
+# The 10 variables selected:
+# 1. Median age: 'medage' ('DP05_0018E')
+# 2. Proportion of bachelor's degree attainment: 'propbac' ('DP02_0065PE')
+# 3. Proportion of health insurance coverage: 'propcov' ('DP03_0096PE')
+# 4. Proportion of employment: 'propempl' ('DP03_0004PE')
+# 5. Proportion of black people: 'propblack' ('DP05_0038PE')
+# 6. Fertility rate (Number of women 15 to 50 years old who had a birth
+#    in the past 12 months): 'fertrate' ('DP02PR_0037PE')
+# 7. Proportion of school enrollment: 'propsch' ('DP02_0053PE')
+# 8. Proportion of households with a computer: 'propcomp' ('DP02_0152PE')
+# 9. Total housing units: 'tolhouse' ('DP04_0001E')
+# 10. Proportion of civilians with disability: 'propdisa' ('DP02_0072PE')
+
+Variables = c('DP03_0128PE', 'DP05_0018E', 'DP02_0065PE', 'DP03_0096PE',
+              'DP03_0004PE', 'DP05_0038PE', 'DP02_0037PE', 'DP02_0053PE',
+              'DP02_0152PE', 'DP04_0001E', 'DP02_0072PE')
+
+df3 <- get_acs(
+  geography = "tract", variables = Variables,
+  year = 2019, state = Allstates, output="wide",
+  key = 'e61b56441ee4ab32492482feed5b4d49fd550cea'
+)
+
+df3 <- df3[grep("M$", names(df3), invert = TRUE)]
+col_names = c('geoid','name', 'proppov', 'medage', 'propbac',
+              'propcov', 'propempl', 'propblack','fertrate',
+              'propsch', 'propcomp', 'tolhouse', 'propdisa')
+colnames(df3) <- col_names
+head(df3)
+summary(df3)
+
+# Q9 (a)
+# The pattern of missing values
+require(VIM)
+plot(aggr(df3, plot = FALSE), prop = TRUE, numbers = FALSE)
+
+# Filter out the missing values and useless variables
+df3 <- (df3 %>% filter(complete.cases(df3)))[col_names[3:length(col_names)]]
+
+# Q9 (b)
+require(leaps)
+Bestlm <- regsubsets(
+  x = proppov~., data = df3,
+  nvmax = 11, method = "exhaustive")
+summary(Bestlm)$which
+summary(Bestlm)$adjr2
+
+lm_empty = lm(proppov ~ 1, data = df3)
+lm_full = lm(proppov ~ ., data = df3)
+step(lm_full, direction = 'backward')
+step(lm_empty, scope = formula(lm_full), direction = 'forward')
+
+Best_lm =  lm(formula = proppov ~ medage + propbac + propcov + propempl + 
+propblack + fertrate + propcomp + tolhouse + propdisa, data = df3)
+
+# Q9 (C)
+
+RMSE = sqrt(summary(Best_lm)$sigma)
 
