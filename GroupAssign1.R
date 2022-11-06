@@ -326,7 +326,77 @@ df[df$geoid=='17031081403',]['propbac'] #actual attainment falls below confidenc
 #adding weights
 GA2Model2 <- lm(propbac ~ totpop + medage + medhhinc + propcov + proppov + proprent, data = df, weights = totpop)
 predict(GA2Model2,df[df$geoid=='17031081403',],interval='confidence',level=0.9)
-GA2Model2$fitted.values[df$geoid == 17031081403] #point estimate shows smaller value
 
 #Q7C
+ga2summ = summary(GA2Model)
+p7cIntercept = rnorm(
+  10000,
+  ga2summ$coefficients['(Intercept)','Estimate'],
+  ga2summ$coefficients['(Intercept)','Std. Error']
+)
+p7ctotpop = rnorm(
+  10000,
+  ga2summ$coefficients['totpop','Estimate'],
+  ga2summ$coefficients['totpop','Std. Error']
+)
+p7cmedage = rnorm(
+  10000,
+  ga2summ$coefficients['medage','Estimate'],
+  ga2summ$coefficients['medage','Std. Error']
+)
+p7cmedhhinc = rnorm(
+  10000,
+  ga2summ$coefficients['medhhinc','Estimate'],
+  ga2summ$coefficients['medhhinc','Std. Error']
+)
+p7cpropcov = rnorm(
+  10000,
+  ga2summ$coefficients['propcov','Estimate'],
+  ga2summ$coefficients['propcov','Std. Error']
+)
+p7cproppov = rnorm(
+  10000,
+  ga2summ$coefficients['proppov','Estimate'],
+  ga2summ$coefficients['proppov','Std. Error']
+)
+p7cproprent = rnorm(
+  10000,
+  ga2summ$coefficients['proprent','Estimate'],
+  ga2summ$coefficients['proprent','Std. Error']
+)
+simBetaDf = data.frame(p7cIntercept,p7ctotpop,p7cmedage,p7cmedhhinc,p7cpropcov,p7cproppov,p7cproprent)
+
+simBetaDf['prediction'] = simBetaDf$p7cIntercept+
+  simBetaDf$p7ctotpop*df[df$geoid=='17031081403',]$totpop+
+  simBetaDf$p7cmedage*df[df$geoid=='17031081403',]$medage+
+  simBetaDf$p7cmedhhinc*df[df$geoid=='17031081403',]$medhhinc+
+  simBetaDf$p7cpropcov*df[df$geoid=='17031081403',]$propcov+
+  simBetaDf$p7cproppov*df[df$geoid=='17031081403',]$proppov+
+  simBetaDf$p7cproprent*df[df$geoid=='17031081403',]$proprent
+
+quantile(simBetaDf$prediction,c(.05,.95))
+
+#8 
+
+df<-within(
+  df, 
+  residQuartile <- as.integer(
+    cut(
+      GA2Model$residuals, 
+      quantile(GA2Model$residuals, probs=0:4/4), 
+      include.lowest=TRUE
+    )
+  )
+)
+
+ggplot() +
+  geom_sf(data = df, aes(fill = residQuartile), show.legend = TRUE) +
+  labs(title = 'Tract Labeled By Residual Quartile', subtitle = 'Cook County, IL', caption = "From 2015 to 2019") + 
+  scale_fill_viridis_c(name = 'Residual Quartile', option="B", direction = -1)
+
+
+
+
+
+
 
