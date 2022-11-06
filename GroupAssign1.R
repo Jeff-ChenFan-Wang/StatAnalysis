@@ -272,15 +272,14 @@ Allstates <- unique(fips_codes$state)[1:51]
 df2 <- map_df(Allstates, function(x) { 
   get_acs(geography = "tract", 
           year = 2019,
-          variables = c('DP05_0001E','DP02_0065PE'), 
+          variables = c('DP05_0001E','DP05_0018E','DP03_0062E','DP02_0065PE','DP03_0096PE','DP03_0128PE','DP04_0047PE'),
           state = x,
           output = 'wide'
   )})
 
-
 #renaming
 df2<- df2[grep("M$",names(df2),invert=TRUE)]
-colnames(df2) <- c('geoid','name','totpop','propbac','geometry')
+colnames(df2) <- c('geoid','name','totpop','medage','medhhinc','propbac','propcov','proppov','proprent','geometry')
 head(df2)
 
 #created a column IsCook and added Flag to it
@@ -320,13 +319,13 @@ t.test(df2$propbac[df2$IsCook == 1] , mu = eq_weight)
 # 17031081403 GEO ID for NBC and GLEATCHER
 
 #Q7A
-GA2Model$fitted.values[df2$geoid == "17031081403"] #point estimate
-confint(GA2Model, level= 0.9) #no idea here, confused, Discuss
+predict(GA2Model,df2[df2$geoid=='17031081403',],interval='confidence',level=0.9) #point estimate
+df2[df2$geoid=='17031081403',]['propbac'] #actual attainment falls below confidence interval
 
 #Q7B
 #adding weights
 GA2Model2 <- lm(propbac ~ totpop + medage + medhhinc + propcov + proppov + proprent, data = df, weights = totpop)
-confint(GA2Model2, level = 0.9) #interval are more tighter
+predict(GA2Model2,df2[df2$geoid=='17031081403',],interval='confidence',level=0.9)
 GA2Model2$fitted.values[df2$geoid == 17031081403] #point estimate shows smaller value
 
 #Q7C
