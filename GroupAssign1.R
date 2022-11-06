@@ -564,7 +564,7 @@ dwtest(lm_trans3, alternative = "two.sided")
 bptest(lm_trans3)
 ks.test(lm_trans3$residuals/summary(lm_trans3)$sigma, pnorm)
 
-# (2) Step 3 - Transformation on 'fertrate'
+# (3) Step 3 - Transformation on 'fertrate'
 
 summary(df3$fertrate)
 
@@ -595,3 +595,29 @@ dwtest(lm_trans4, alternative = "two.sided")
 bptest(lm_trans4)
 ks.test(lm_trans4$residuals/summary(lm_trans4)$sigma, pnorm)
 
+# (4) Step 4 - Transformation on 'propcov'
+
+plot((propcov/100)^4, sqrt(proppov), col = 'deepskyblue')
+
+# The linear relationship between 'propcov' and the response is also bad and the distribution of 'propcov' is concentrated on [80, 100]
+# To improve the linearity, use a quartic function to transform 'propcov' this time
+# We should divide 'propcov' by 100 to standardize it firstly to control its scale after transformation
+# The ajusted R^2 is improved to 0.6714 now
+lm_full = lm(formula = sqrt(proppov) ~ medage + propbac + I((propcov/100)^4) +
+  propempl +propblack + fertrate_grp + propcomp + log(tolhouse) + propdisa +
+  log(propsch), data = filter(df3, propsch != 0))
+step(lm_full, direction = 'backward')
+lm_trans5 = lm(formula = sqrt(proppov) ~ medage + propbac + I((propcov/100)^4) +
+  propempl +propblack + fertrate_grp + propcomp + log(tolhouse) + propdisa +
+  log(propsch), data = filter(df3, propsch != 0))
+
+summary(lm_trans5)
+AdjR2_5 = summary(lm_trans5)$adj.r.squared
+dwtest(lm_trans5, alternative = "two.sided")
+bptest(lm_trans5)
+ks.test(lm_trans5$residuals/summary(lm_trans5)$sigma, pnorm)
+
+# Although the above statistical tests are still significant, from the plots below,
+# we can see compared with the original model in Question 9, the model after reform ('lm_trans5')
+# is much better on OLS residual assumptions
+plot(lm_trans5)
