@@ -253,6 +253,7 @@ summary(GA2Model)
 medhhincBoostReqNaive = 0.05/GA2Model$coefficients['medhhinc']
 #Naive answer boost insurance coverage proportion (propcov) by ≈ 0.0887
 
+simpleDf = st_drop_geometry(df[c('totpop','medage','medhhinc','propcov','proppov','proprent')])
 corrMat = cor(simpleDf)
 
 povHincLm = lm(proppov ~ medhhinc,data=df)
@@ -394,8 +395,31 @@ ggplot() +
   labs(title = 'Tract Labeled By Residual Quartile', subtitle = 'Cook County, IL', caption = "From 2015 to 2019") + 
   scale_fill_viridis_c(name = 'Residual Quartile', option="B", direction = -1)
 
+ggplot() +
+  geom_sf(data = df, aes(fill = proprent), show.legend = TRUE) +
+  labs(title = 'Tract Labeled By Residual Quartile', subtitle = 'Cook County, IL', caption = "From 2015 to 2019") + 
+  scale_fill_viridis_c(name = 'Residual Quartile', option="B", direction = -1)
 
 
+st_drop_geometry(df) %>% group_by(residQuartile)  %>%
+  summarise(
+    avg_totpop = mean(totpop),
+    avg_medage = mean(medage),
+    avg_medhhinc = mean(medhhinc),
+    avg_propbac = mean(propbac),
+    avg_propcov = mean(propcov),
+    avg_proppov = mean(proppov),
+    avg_proprent = mean(proprent),
+  
+  )
+
+
+ggplot(df, mapping=aes(y = medhhinc, x=medage,color=as.factor(residQuartile))) +
+  geom_point() +
+  scale_fill_brewer() +
+  guides(color = guide_legend(title = 'Residual Quartile'))+
+  ggtitle('Effect of Robinhood Tax')+theme(plot.title = element_text(hjust = 0.5)) +
+  theme(legend.position = c(0.8,0.2))
 
 
 
