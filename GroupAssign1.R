@@ -272,19 +272,19 @@ Allstates <- unique(fips_codes$state)[1:51]
 df2 <- map_df(Allstates, function(x) { 
   get_acs(geography = "tract", 
           year = 2019,
-          variables = c('DP05_0001E','DP05_0018E','DP03_0062E','DP02_0065PE','DP03_0096PE','DP03_0128PE','DP04_0047PE'),
+          variables = c('DP05_0001E','DP02_0065PE'),
           state = x,
           output = 'wide'
   )})
 
 #renaming
 df2<- df2[grep("M$",names(df2),invert=TRUE)]
-colnames(df2) <- c('geoid','name','totpop','medage','medhhinc','propbac','propcov','proppov','proprent','geometry')
+colnames(df2) <- c('geoid','name','totpop','propbac','geometry')
 head(df2)
 
 #created a column IsCook and added Flag to it
 df2$IsCook <- 0
-df2$IsCook[grep('Cook', df2$name)] = 1
+df2$IsCook[grep('Cook County, Illinois', df2$name)] = 1
 
 prevDim <- dim(df2)
 prevDim
@@ -319,14 +319,14 @@ t.test(df2$propbac[df2$IsCook == 1] , mu = eq_weight)
 # 17031081403 GEO ID for NBC and GLEATCHER
 
 #Q7A
-predict(GA2Model,df2[df2$geoid=='17031081403',],interval='confidence',level=0.9) #point estimate
-df2[df2$geoid=='17031081403',]['propbac'] #actual attainment falls below confidence interval
+predict(GA2Model,df[df$geoid=='17031081403',],interval='confidence',level=0.9) #point estimate
+df[df$geoid=='17031081403',]['propbac'] #actual attainment falls below confidence interval
 
 #Q7B
 #adding weights
 GA2Model2 <- lm(propbac ~ totpop + medage + medhhinc + propcov + proppov + proprent, data = df, weights = totpop)
-predict(GA2Model2,df2[df2$geoid=='17031081403',],interval='confidence',level=0.9)
-GA2Model2$fitted.values[df2$geoid == 17031081403] #point estimate shows smaller value
+predict(GA2Model2,df[df$geoid=='17031081403',],interval='confidence',level=0.9)
+GA2Model2$fitted.values[df$geoid == 17031081403] #point estimate shows smaller value
 
 #Q7C
 
