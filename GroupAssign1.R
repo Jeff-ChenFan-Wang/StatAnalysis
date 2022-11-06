@@ -250,25 +250,22 @@ ggplot() +
 
 #Q5
 summary(GA2Model)
+medhhincBoostReqNaive = 0.05/GA2Model$coefficients['medhhinc']
 #Naive answer boost insurance coverage proportion (propcov) by ≈ 0.0887
 
-summary(lm(proppov ~ medhhinc,data=df))
-
+simpleDf = st_drop_geometry(df[c('totpop','medage','medhhinc','propcov','proppov','proprent')])
 corrMat = cor(simpleDf)
 
+povHincLm = lm(proppov ~ medhhinc,data=df)
+covHincLm = lm(propcov ~ medhhinc,data=df)
+rentHincLm = lm(proprent ~ medhhinc,data=df)
 
+endogMedhhincCoef = GA2Model$coefficients['medhhinc'] +
+  povHincLm$coefficients['medhhinc']*GA2Model$coefficients['proppov'] + 
+  covHincLm$coefficients['medhhinc']*GA2Model$coefficients['propcov'] +
+  rentHincLm$coefficients['medhhinc']*GA2Model$coefficients['proprent']
 
-
-
-
-
-summary(lm(medhhinc ~ propcov, data = scaledDf))
-
-#propbac = 0.01 medhhinc - 0.02 proprent + 0.03 totpop ... 
-#bascially, increasing  medhhinc by 5 implies increasing propbac by 0.05 
-
-#also figure out how vars move together (e.g medhinc increases causes increased rents etc)
-#endogenous effects within variables
+medhhincBoostReqEndog = 0.05/endogMedhhincCoef
 
 
 #q6a
@@ -276,12 +273,11 @@ Allstates <- unique(fips_codes$state)[1:51]
 df2 <- map_df(Allstates, function(x) { 
   get_acs(geography = "tract", 
           year = 2019,
-          variables = c('DP05_0001E','DP02_0065PE'), 
+          variables = c('DP05_0001E','DP02_0065PE'),
           state = x,
           output = 'wide',
           key = 'e61b56441ee4ab32492482feed5b4d49fd550cea'
   )})
-
 
 #renaming
 df2<- df2[grep("M$",names(df2),invert=TRUE)]
@@ -290,7 +286,7 @@ head(df2)
 
 #created a column IsCook and added Flag to it
 df2$IsCook <- 0
-df2$IsCook[grep('Cook', df2$name)] = 1
+df2$IsCook[grep('Cook County, Illinois', df2$name)] = 1
 
 prevDim <- dim(df2)
 prevDim
@@ -325,16 +321,109 @@ t.test(df2$propbac[df2$IsCook == 1] , mu = eq_weight)
 # 17031081403 GEO ID for NBC and GLEATCHER
 
 #Q7A
-GA2Model$fitted.values[df2$geoid == "17031081403"] #point estimate
-confint(GA2Model, level= 0.9) #no idea here, confused, Discuss
+predict(GA2Model,df[df$geoid=='17031081403',],interval='confidence',level=0.9) #point estimate
+df[df$geoid=='17031081403',]['propbac'] #actual attainment falls below confidence interval
 
 #Q7B
 #adding weights
 GA2Model2 <- lm(propbac ~ totpop + medage + medhhinc + propcov + proppov + proprent, data = df, weights = totpop)
-confint(GA2Model2, level = 0.9) #interval are more tighter
-GA2Model2$fitted.values[df2$geoid == 17031081403] #point estimate shows smaller value
+predict(GA2Model2,df[df$geoid=='17031081403',],interval='confidence',level=0.9)
 
 #Q7C
+ga2summ = summary(GA2Model)
+p7cIntercept = rnorm(
+  10000,
+  ga2summ$coefficients['(Intercept)','Estimate'],
+  ga2summ$coefficients['(Intercept)','Std. Error']
+)
+p7ctotpop = rnorm(
+  10000,
+  ga2summ$coefficients['totpop','Estimate'],
+  ga2summ$coefficients['totpop','Std. Error']
+)
+p7cmedage = rnorm(
+  10000,
+  ga2summ$coefficients['medage','Estimate'],
+  ga2summ$coefficients['medage','Std. Error']
+)
+p7cmedhhinc = rnorm(
+  10000,
+  ga2summ$coefficients['medhhinc','Estimate'],
+  ga2summ$coefficients['medhhinc','Std. Error']
+)
+p7cpropcov = rnorm(
+  10000,
+  ga2summ$coefficients['propcov','Estimate'],
+  ga2summ$coefficients['propcov','Std. Error']
+)
+p7cproppov = rnorm(
+  10000,
+  ga2summ$coefficients['proppov','Estimate'],
+  ga2summ$coefficients['proppov','Std. Error']
+)
+p7cproprent = rnorm(
+  10000,
+  ga2summ$coefficients['proprent','Estimate'],
+  ga2summ$coefficients['proprent','Std. Error']
+)
+simBetaDf = data.frame(p7cIntercept,p7ctotpop,p7cmedage,p7cmedhhinc,p7cpropcov,p7cproppov,p7cproprent)
+
+simBetaDf['prediction'] = simBetaDf$p7cIntercept+
+  simBetaDf$p7ctotpop*df[df$geoid=='17031081403',]$totpop+
+  simBetaDf$p7cmedage*df[df$geoid=='17031081403',]$medage+
+  simBetaDf$p7cmedhhinc*df[df$geoid=='17031081403',]$medhhinc+
+  simBetaDf$p7cpropcov*df[df$geoid=='17031081403',]$propcov+
+  simBetaDf$p7cproppov*df[df$geoid=='17031081403',]$proppov+
+  simBetaDf$p7cproprent*df[df$geoid=='17031081403',]$proprent
+
+quantile(simBetaDf$prediction,c(.05,.95))
+
+#8 
+
+df<-within(
+  df, 
+  residQuartile <- as.integer(
+    cut(
+      GA2Model$residuals, 
+      quantile(GA2Model$residuals, probs=0:4/4), 
+      include.lowest=TRUE
+    )
+  )
+)
+
+ggplot() +
+  geom_sf(data = df, aes(fill = residQuartile), show.legend = TRUE) +
+  labs(title = 'Tract Labeled By Residual Quartile', subtitle = 'Cook County, IL', caption = "From 2015 to 2019") + 
+  scale_fill_viridis_c(name = 'Residual Quartile', option="B", direction = -1)
+
+ggplot() +
+  geom_sf(data = df, aes(fill = proprent), show.legend = TRUE) +
+  labs(title = 'Tract Labeled By Residual Quartile', subtitle = 'Cook County, IL', caption = "From 2015 to 2019") + 
+  scale_fill_viridis_c(name = 'Residual Quartile', option="B", direction = -1)
+
+
+st_drop_geometry(df) %>% group_by(residQuartile)  %>%
+  summarise(
+    avg_totpop = sd(totpop),
+    avg_medage = sd(medage),
+    avg_medhhinc = sd(medhhinc),
+    avg_propbac = sd(propbac),
+    avg_propcov = sd(propcov),
+    avg_proppov = sd(proppov),
+    avg_proprent = sd(proprent),
+  
+  )
+
+
+ggplot(df, mapping=aes(y = propbac, x=proppov, color=as.factor(residQuartile))) +
+  geom_point() +
+  scale_fill_brewer() +
+  guides(color = guide_legend(title = 'Residual Quartile'))+
+  ggtitle('Effect of Robinhood Tax')+theme(plot.title = element_text(hjust = 0.5)) +
+  theme(legend.position = c(0.8,0.2))
+
+
+
 
 
 
