@@ -403,18 +403,18 @@ ggplot() +
 
 st_drop_geometry(df) %>% group_by(residQuartile)  %>%
   summarise(
-    avg_totpop = mean(totpop),
-    avg_medage = mean(medage),
-    avg_medhhinc = mean(medhhinc),
-    avg_propbac = mean(propbac),
-    avg_propcov = mean(propcov),
-    avg_proppov = mean(proppov),
-    avg_proprent = mean(proprent),
+    avg_totpop = sd(totpop),
+    avg_medage = sd(medage),
+    avg_medhhinc = sd(medhhinc),
+    avg_propbac = sd(propbac),
+    avg_propcov = sd(propcov),
+    avg_proppov = sd(proppov),
+    avg_proprent = sd(proprent),
   
   )
 
 
-ggplot(df, mapping=aes(y = medhhinc, x=medage,color=as.factor(residQuartile))) +
+ggplot(df, mapping=aes(y = propbac, x=proppov, color=as.factor(residQuartile))) +
   geom_point() +
   scale_fill_brewer() +
   guides(color = guide_legend(title = 'Residual Quartile'))+
