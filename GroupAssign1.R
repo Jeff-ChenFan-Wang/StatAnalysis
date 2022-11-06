@@ -423,10 +423,6 @@ ggplot(df, mapping=aes(y = propbac, x=proppov, color=as.factor(residQuartile))) 
   theme(legend.position = c(0.8,0.2))
 
 
-
-
-
-
 ## Q9
 
 # The 10 variables selected:
@@ -484,7 +480,74 @@ step(lm_empty, scope = formula(lm_full), direction = 'forward')
 Best_lm =  lm(formula = proppov ~ medage + propbac + propcov + propempl + 
 propblack + fertrate + propcomp + tolhouse + propdisa, data = df3)
 
+dwtest(Best_lm, alternative = "two.sided")
+bptest(Best_lm)
+ks.test(Best_lm$residuals/summary(Best_lm)$sigma, pnorm)
+
 # Q9 (C)
 
 RMSE = sqrt(summary(Best_lm)$sigma)
+
+
+## Q10
+
+# 1. Transformation on response
+
+# Use root function to transform the response
+# RMSE can be reduced from 2.63 to 0.91
+lm_trans1 =  lm(formula = sqrt(proppov) ~ medage + propbac + propcov + propempl + 
+  propblack + fertrate + propcomp + tolhouse + propdisa, data = df3)
+
+RMSE_trans = sqrt(summary(lm_trans1)$sigma)
+AdjR2_1 = summary(lm_trans1)$adj.r.squared
+
+dwtest(lm_trans1, alternative = "two.sided")
+bptest(lm_trans1)
+ks.test(lm_trans1$residuals/summary(lm_trans1)$sigma, pnorm)
+
+# 2. Transformation on explanatory variables
+
+# - Try to improve the linear relationship between the response
+# - covariates as much as possible
+
+attach(df3)
+plot(medage, sqrt(proppov), col = 'deepskyblue')
+plot(propbac, sqrt(proppov), col = 'deepskyblue')
+plot(propcov, sqrt(proppov), col = 'deepskyblue')
+plot(propempl, sqrt(proppov), col = 'deepskyblue')
+plot(propblack, sqrt(proppov), col = 'deepskyblue')
+plot(fertrate, sqrt(proppov), col = 'deepskyblue')
+plot(propcomp, sqrt(proppov), col = 'deepskyblue')
+plot(tolhouse, sqrt(proppov), col = 'deepskyblue')
+plot(propdisa, sqrt(proppov), col = 'deepskyblue')
+detach(df3)
+
+# (1) Step 1 - Transformation on 'tolhouse'
+
+plot(log(tolhouse), sqrt(proppov), col = 'deepskyblue')
+
+# Use log transformation on 'tolhouse'
+# Adjusted R^2 is improved from 0.6542 to 0.6587
+lm_full =  lm(formula = sqrt(proppov) ~ medage + propbac + propcov + propempl + 
+  propblack + fertrate + propcomp + log(tolhouse) + propdisa + propsch, data = df3)
+step(lm_full, direction = 'backward')
+
+lm_trans2 = lm(formula = sqrt(proppov) ~ medage + propbac + propcov + propempl + 
+  propblack + fertrate + propcomp + log(tolhouse) + propdisa + propsch, data = df3)
+summary(lm_trans2)
+AdjR2_2 = summary(lm_trans2)$adj.r.squared
+
+dwtest(lm_trans2, alternative = "two.sided")
+bptest(lm_trans2)
+ks.test(lm_trans2$residuals/summary(lm_trans2)$sigma, pnorm)
+
+
+# step functions derived from continuous predictors
+df3$tolhouse_grp = NA
+floors = c(0, 750, 1500, 2250, 3000, 5000, Inf)
+for (k in c(1:(length(floors)-1))){
+  df3[(df3$tolhouse >= floors[k])&(df3$tolhouse < floors[k+1]), 'tolhouse_grp'] = paste('LV', k)
+}
+df3$tolhouse_grp = factor(df3$tolhouse_grp, levels = paste('LV', 1:6))
+
 
