@@ -1,0 +1,161 @@
+---
+title: "Figures"
+output: html_document
+date: "2022-11-09"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library('tidycensus')
+library('tidyverse')
+```
+
+```{r}
+## Question 9
+Variables = c('DP03_0128PE', 'DP05_0001E', 'DP05_0018E',
+'DP02_0065PE', 'DP03_0096PE', 'DP05_0037PE', 'DP05_0002PE', 'DP02_0027PE', 'DP03_0002PE', 'DP04_0090PE', 'DP02_0115PE')
+
+#DP05_0001E Estimate!!SEX AND AGE!!Total population 
+
+#DP05_0018E Estimate!!SEX AND AGE!!Total population!!Median age #(years)
+
+#DP02_0065PE	Percent!!EDUCATIONAL ATTAINMENT!!Population 25 years #and over!!Bachelor's degree
+
+#DP03_0096PE	Percent!!HEALTH INSURANCE COVERAGE!!Civilian #noninstitutionalized population!!With health insurance coverage
+
+#DP05_0037PE	Percent!!RACE!!Total population!!One race!!White
+
+#DP05_0002PE	Percent!!SEX AND AGE!!Total population!!Male
+
+#DP02_0027PE	Percent!!MARITAL STATUS!!Males 15 years and over!!Now #married, except separated
+
+#DP03_0002PE	Percent!!EMPLOYMENT STATUS!!Population 16 years and #over!!In labor force
+
+#DP04_0090PE	Percent!!MORTGAGE STATUS!!Owner-occupied units
+
+#DP02_0115PE	Percent!!LANGUAGE SPOKEN AT HOME!!Population 5 years #and over!!Spanish
+
+
+df3 <- get_acs(
+  geography = "tract", variables = Variables,
+  year = 2019, state = Allstates, output = "wide",
+  key = 'e61b56441ee4ab32492482feed5b4d49fd550cea'
+)
+
+df3 <- df3[grep("M$", names(df3), invert = TRUE)]
+col_names = c('geoid','name', 'proppov', 'totpop', 'medage', 'propbac', 'propcov', 'propwhite', 'propmale', 'propmalemarry', 'proplabor', 'propoccupy', 'propspanish')
+colnames(df3) <- col_names
+head(df3)
+summary(df3)
+
+
+# Q9 (a)
+# The pattern of missing values
+require(VIM)
+plot(aggr(df3, plot = FALSE), prop = TRUE, numbers = FALSE)
+
+# Filter out the missing values and useless variables
+df3 <- (df3 %>% filter(complete.cases(df3)))[col_names[3:length(col_names)]]
+
+# Q9 (b)
+lm_full = lm(proppov ~ ., data = df3)
+step(lm_full, direction = 'backward')
+
+Best_lm = lm(formula = proppov ~ medage + propbac + propcov + propwhite + 
+    propmale + propmalemarry + proplabor + propoccupy + propspanish, 
+    data = df3)
+
+dwtest(Best_lm, alternative = "two.sided")
+bptest(Best_lm)
+ks.test(Best_lm$residuals/summary(Best_lm)$sigma, pnorm)
+
+# Q9 (c)
+RMSE = summary(Best_lm)$sigma
+AdjR2 = summary(Best_lm)$adj.r.squared
+
+```
+
+```{r}
+## Question 10
+attach(df3)
+hist(totpop, col = 'deepskyblue', breaks = 20)
+hist(medage, col = 'deepskyblue', breaks = 20)
+hist(propbac, col = 'deepskyblue', breaks = 20)
+hist(propcov, col = 'deepskyblue', breaks = 20)
+hist(propwhite, col = 'deepskyblue', breaks = 20)
+hist(propmale, col = 'deepskyblue', breaks = 20)
+hist(propmalemarry, col = 'deepskyblue', breaks = 20)
+hist(proplabor, col = 'deepskyblue', breaks = 20)
+hist(propoccupy, col = 'deepskyblue', breaks = 20)
+hist(propspanish, col = 'deepskyblue', breaks = 20)
+detach(df3)
+
+attach(df3)
+hist(log(totpop), col = 'deepskyblue', breaks = 20)
+hist(sqrt(propbac), col = 'deepskyblue', breaks = 20)
+hist(log(propcov), col = 'deepskyblue', breaks = 20)
+hist(log(propwhite), col = 'deepskyblue', breaks = 20)
+hist(sqrt(propmalemarry), col = 'deepskyblue', breaks = 20)
+hist(log(propoccupy), col = 'deepskyblue', breaks = 20)
+hist(log(propspanish), col = 'deepskyblue', breaks = 20)
+detach(df3)
+```
+
+```{r}
+df = df3
+# Step 1
+lm_trans1 = Best_lm = lm(formula = proppov ~ log(totpop) + medage + propbac + propcov + propwhite + propmale + propmalemarry + proplabor + propoccupy + propspanish, data = df3)
+step(lm_trans1, direction = 'backward')
+AdjR2_1 = summary(lm_trans1)$adj.r.squared
+
+# Step 2
+lm_trans2 = lm(formula = proppov ~ log(totpop) + medage + sqrt(propbac) + propcov + propwhite + propmale + propmalemarry + proplabor + propoccupy + propspanish, data = df3)
+step(lm_trans2, direction = 'backward')
+AdjR2_2 = summary(lm_trans2)$adj.r.squared
+
+# Step 3
+df3 = df3 %>% filter(propcov>0)
+lm_trans3 = lm(formula = proppov ~ log(totpop) + medage + sqrt(propbac) + log(propcov) + propwhite + propmale + propmalemarry + proplabor + propoccupy + propspanish, data = df3)
+step(lm_trans3, direction = 'backward')
+AdjR2_3 = summary(lm_trans3)$adj.r.squared
+
+# Step 4
+df3 = df3 %>% filter(propwhite>0)
+lm_trans4 = lm(formula = proppov ~ log(totpop) + medage + sqrt(propbac) + log(propcov) + log(propwhite) + propmale + propmalemarry + proplabor + propoccupy + propspanish, data = df3)
+step(lm_trans4, direction = 'backward')
+AdjR2_4 = summary(lm_trans4)$adj.r.squared
+
+# Step 5
+lm_trans5 = lm(formula = proppov ~ log(totpop) + medage + sqrt(propbac) + log(propcov) + log(propwhite) + propmale + sqrt(propmalemarry) + proplabor + propoccupy + propspanish, data = df3)
+step(lm_trans5, direction = 'backward')
+AdjR2_5 = summary(lm_trans5)$adj.r.squared
+
+# Step 6
+df3 = df3 %>% filter(propoccupy > 0)
+lm_trans6 = lm(formula = proppov ~ log(totpop) + medage + sqrt(propbac) + log(propcov) + log(propwhite) + propmale + sqrt(propmalemarry) + proplabor + log(propoccupy) + propspanish, data = df3)
+step(lm_trans6, direction = 'backward')
+AdjR2_6 = summary(lm_trans6)$adj.r.squared
+
+# Step 7
+df3 = df3 %>% filter(propspanish > 0)
+lm_trans7 = lm(formula = proppov ~ log(totpop) + medage + sqrt(propbac) + log(propcov) + log(propwhite) + propmale + sqrt(propmalemarry) + proplabor + log(propoccupy) + log(propspanish), data = df3)
+step(lm_trans7, direction = 'backward')
+
+lm_trans7 = lm(formula = proppov ~ log(totpop) + medage + sqrt(propbac) + 
+    log(propcov) + propmale + sqrt(propmalemarry) + proplabor + 
+    log(propoccupy) + log(propspanish), data = df3)
+AdjR2_7 = summary(lm_trans7)$adj.r.squared
+RMSE = summary(lm_trans7)$sigma
+
+# Step 8 - Transform the response
+lm_trans8 = lm(formula = sqrt(proppov) ~ log(totpop) + medage + sqrt(propbac) + log(propcov) + log(propwhite) + propmale + sqrt(propmalemarry) + proplabor + log(propoccupy) + log(propspanish), data = df3)
+step(lm_trans8, direction = 'backward')
+
+sqrt(sum(((lm_trans8$fitted.values)^2 - df3['proppov'])^2)/nrow(df3))
+AdjR2_8 = summary(lm_trans8)$adj.r.squared
+
+dwtest(lm_trans8, alternative = "two.sided")
+bptest(lm_trans8)
+ks.test(lm_trans8$residuals/summary(lm_trans8)$sigma, pnorm)
+plot(lm_trans8)
+```

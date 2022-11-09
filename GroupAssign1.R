@@ -486,8 +486,8 @@ ks.test(Best_lm$residuals/summary(Best_lm)$sigma, pnorm)
 
 # Q9 (C)
 
-RMSE = sqrt(summary(Best_lm)$sigma)
-
+RMSE = summary(Best_lm)$sigma
+AdjR2 = summary(Best_lm)$adj.r.squared
 
 ## Q10
 
@@ -495,10 +495,25 @@ RMSE = sqrt(summary(Best_lm)$sigma)
 
 # Use root function to transform the response
 # RMSE can be reduced from 2.63 to 0.91
-lm_trans1 =  lm(formula = sqrt(proppov) ~ medage + propbac + propcov + propempl + 
+lm_trans1 =  lm(formula = proppov/100 ~ medage + propbac + propcov + propempl + 
   propblack + fertrate + propcomp + tolhouse + propdisa, data = df3)
+plot(lm_trans1)
 
-RMSE_trans = sqrt(summary(lm_trans1)$sigma)
+
+df3New = df3%>%filter(propcov>0, propblack>0, fertrate>0, propcomp>0, propsch>0)
+lm_full =  lm(formula = proppov ~ medage + propbac + log(propcov) + propempl + 
+                log(propblack) + log(fertrate) + log(propcomp) + sqrt(tolhouse) + propdisa + log(propsch), data = df3New)
+step(lm_full, direction = 'backward')
+summary(lm_full)$adj.r.squared
+summary(lm_full)$sigma
+
+lm_trans =  lm(formula = sqrt(proppov) ~ medage + propbac + log(propcov) + propempl + 
+  log(propblack) + log(fertrate) + log(propcomp) + sqrt(tolhouse) + propdisa + log(propsch), data = df3New)
+sqrt(sum(((lm_trans$fitted.values)^2 - df3New['proppov'])^2)/nrow(df3New))
+dwtest(lm_trans, alternative = "two.sided")
+bptest(lm_trans)
+ks.test(lm_trans$residuals/summary(lm_trans)$sigma, pnorm)
+
 AdjR2_1 = summary(lm_trans1)$adj.r.squared
 
 dwtest(lm_trans1, alternative = "two.sided")
@@ -511,6 +526,7 @@ ks.test(lm_trans1$residuals/summary(lm_trans1)$sigma, pnorm)
 # - covariates as much as possible
 
 attach(df3)
+plot(proppov)
 plot(medage, sqrt(proppov), col = 'deepskyblue')
 plot(propbac, sqrt(proppov), col = 'deepskyblue')
 plot(propcov, sqrt(proppov), col = 'deepskyblue')
@@ -532,6 +548,10 @@ plot(log(tolhouse), sqrt(proppov), col = 'deepskyblue')
 lm_full =  lm(formula = sqrt(proppov) ~ medage + propbac + propcov + propempl + 
   propblack + fertrate + propcomp + log(tolhouse) + propdisa + propsch, data = df3)
 step(lm_full, direction = 'backward')
+
+dwtest(lm_full, alternative = "two.sided")
+bptest(lm_full)
+ks.test(lm_full$residuals/summary(lm_full)$sigma, pnorm)
 
 lm_trans2 = lm(formula = sqrt(proppov) ~ medage + propbac + propcov + propempl + 
   propblack + fertrate + propcomp + log(tolhouse) + propdisa + propsch, data = df3)
