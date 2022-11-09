@@ -405,26 +405,38 @@ ggplot() +
   scale_fill_viridis_c(name = 'Residuals', option="B", direction = -1)+
   theme(legend.position = c(0.2,0.4))
 
+df[df$geoid=='17031081403',]$residual
+summary(df)
+
+mean(df[df$residQuartile==1,]$propbac)
 
 st_drop_geometry(df) %>% group_by(residQuartile)  %>%
   summarise(
-    avg_totpop = sd(totpop),
-    avg_medage = sd(medage),
-    avg_medhhinc = sd(medhhinc),
-    avg_propbac = sd(propbac),
-    avg_propcov = sd(propcov),
-    avg_proppov = sd(proppov),
-    avg_proprent = sd(proprent),
-  
+    avg_totpop = median(totpop),
+    avg_medage = median(medage),
+    avg_medhhinc = median(medhhinc),
+    avg_propbac = median(propbac),
+    avg_propcov = median(propcov),
+    avg_proppov = median(proppov),
+    avg_proprent = median(proprent),
+    
   )
 
-
-ggplot(df, mapping=aes(y = propbac, x=proppov, color=as.factor(residQuartile))) +
+residLm = lm(propbac ~ residual, data = df)
+g1 = ggplot(df, mapping=aes(y = propbac, x=residual, color=as.factor(residQuartile))) +
   geom_point() +
   scale_fill_brewer() +
-  guides(color = guide_legend(title = 'Residual Quartile'))+
-  ggtitle('Effect of Robinhood Tax')+theme(plot.title = element_text(hjust = 0.5)) +
+  guides(color = guide_legend(title = 'Residual\nQuartile'))+
   theme(legend.position = c(0.8,0.2))
+
+# residLm = lm(propbac ~ residual, data = df)
+g2 = ggplot(df, mapping=aes(y = medhhinc, x=residual, color=as.factor(residQuartile))) +
+  geom_point() +
+  scale_fill_brewer() +
+  guides(color = guide_legend(title = 'Residual\nQuartile'))+
+  theme(legend.position = c(0.8,0.8))
+
+grid.arrange(g1,g2,nrow=1)
 
 
 ## Q9
