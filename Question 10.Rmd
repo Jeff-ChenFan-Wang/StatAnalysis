@@ -148,7 +148,7 @@ AdjR2_7 = summary(lm_trans7)$adj.r.squared
 RMSE = summary(lm_trans7)$sigma
 
 # Step 8 - Transform the response
-lm_trans8 = lm(formula = sqrt(proppov) ~ log(totpop) + medage + sqrt(propbac) + log(propcov) + log(propwhite) + propmale + sqrt(propmalemarry) + proplabor + log(propoccupy) + log(propspanish), data = df3)
+lm_trans8 = lm(formula = proppov^0.6 ~ log(totpop) + medage + sqrt(propbac) + log(propcov) + log(propwhite) + propmale + sqrt(propmalemarry) + proplabor + log(propoccupy) + log(propspanish), data = df3)
 step(lm_trans8, direction = 'backward')
 
 sqrt(sum(((lm_trans8$fitted.values)^2 - df3['proppov'])^2)/nrow(df3))

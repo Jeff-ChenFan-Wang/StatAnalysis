@@ -494,26 +494,15 @@ AdjR2 = summary(Best_lm)$adj.r.squared
 # 1. Transformation on response
 
 # Use root function to transform the response
-# RMSE can be reduced from 2.63 to 0.91
-lm_trans1 =  lm(formula = proppov/100 ~ medage + propbac + propcov + propempl + 
+# RMSE can be reduced from 6.92 to 6.81.
+lm_full =  lm(formula = sqrt(proppov) ~ medage + propbac + propcov + propempl + 
   propblack + fertrate + propcomp + tolhouse + propdisa, data = df3)
-plot(lm_trans1)
-
-
-df3New = df3%>%filter(propcov>0, propblack>0, fertrate>0, propcomp>0, propsch>0)
-lm_full =  lm(formula = proppov ~ medage + propbac + log(propcov) + propempl + 
-                log(propblack) + log(fertrate) + log(propcomp) + sqrt(tolhouse) + propdisa + log(propsch), data = df3New)
 step(lm_full, direction = 'backward')
-summary(lm_full)$adj.r.squared
-summary(lm_full)$sigma
 
-lm_trans =  lm(formula = sqrt(proppov) ~ medage + propbac + log(propcov) + propempl + 
-  log(propblack) + log(fertrate) + log(propcomp) + sqrt(tolhouse) + propdisa + log(propsch), data = df3New)
-sqrt(sum(((lm_trans$fitted.values)^2 - df3New['proppov'])^2)/nrow(df3New))
-dwtest(lm_trans, alternative = "two.sided")
-bptest(lm_trans)
-ks.test(lm_trans$residuals/summary(lm_trans)$sigma, pnorm)
+lm_trans1 =  lm(formula = sqrt(proppov) ~ medage + propbac + propcov + propempl + 
+  propblack + fertrate + propcomp + tolhouse + propdisa, data = df3)
 
+RMSE = sqrt(sum(((lm_trans1$fitted.values)^2 - df3['proppov'])^2)/nrow(df3))
 AdjR2_1 = summary(lm_trans1)$adj.r.squared
 
 dwtest(lm_trans1, alternative = "two.sided")
