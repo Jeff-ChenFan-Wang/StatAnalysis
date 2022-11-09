@@ -391,15 +391,19 @@ df<-within(
   )
 )
 
+df['residual'] = GA2Model$residuals
+
 ggplot() +
   geom_sf(data = df, aes(fill = residQuartile), show.legend = TRUE) +
   labs(title = 'Tract Labeled By Residual Quartile', subtitle = 'Cook County, IL', caption = "From 2015 to 2019") + 
-  scale_fill_viridis_c(name = 'Residual Quartile', option="B", direction = -1)
+  scale_fill_viridis_c(name = 'Residual\nQuartile', option="B", direction = -1)+
+  theme(legend.position = c(0.2,0.4))
 
 ggplot() +
-  geom_sf(data = df, aes(fill = proprent), show.legend = TRUE) +
-  labs(title = 'Tract Labeled By Residual Quartile', subtitle = 'Cook County, IL', caption = "From 2015 to 2019") + 
-  scale_fill_viridis_c(name = 'Residual Quartile', option="B", direction = -1)
+  geom_sf(data = df, aes(fill = residual), show.legend = TRUE) +
+  labs(title = 'Tract Heatmap by Residual', subtitle = 'Cook County, IL', caption = "From 2015 to 2019") + 
+  scale_fill_viridis_c(name = 'Residuals', option="B", direction = -1)+
+  theme(legend.position = c(0.2,0.4))
 
 
 st_drop_geometry(df) %>% group_by(residQuartile)  %>%
